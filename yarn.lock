@@ -222,6 +222,11 @@
     "@types/mime" "*"
     "@types/node" "*"
 
+"@unicode/unicode-15.1.0@^1.5.2":
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/@unicode/unicode-15.1.0/-/unicode-15.1.0-1.5.2.tgz#0358d05ab99a7d05c12c68cc2123cf124c34beb9"
+  integrity sha512-7PAgnShDr8ziK6XeHB/TUVFboDFEhaQKKyrw55/Kx9o6AQDy1s7dJ9KRpRerW9nrR5qMGUQvOqTXOAek6ZIXkg==
+
 "@vitejs/plugin-vue@^2.2.0":
   version "2.3.4"
   resolved "https://registry.yarnpkg.com/@vitejs/plugin-vue/-/plugin-vue-2.3.4.tgz#966a6279060eb2d9d1a02ea1a331af071afdcf9e"
