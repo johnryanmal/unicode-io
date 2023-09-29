@@ -384,7 +384,8 @@ for (const block of blocks) {
     }
   }
 
-  ranges[block] = [first, last]
+  const name = block.replaceAll('_', ' ')
+  ranges[name] = [first, last]
 }
 
 const data = Object.fromEntries(
