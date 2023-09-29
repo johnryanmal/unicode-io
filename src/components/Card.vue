@@ -21,11 +21,11 @@
       >
         <template #before>
           <q-list>
-            <template v-for="[name, caption] in blocks">
+            <template v-for="[min, max], name in blocks">
               <q-item clickable :active="tab == name" @click="tab = name">
                 <q-item-section>
                   <q-item-label>{{ name }}</q-item-label>
-                  <q-item-label caption>{{ caption }}</q-item-label>
+                  <q-item-label caption>{{ toCodepoint(min) }}..{{ toCodepoint(max) }}</q-item-label>
                 </q-item-section>
               </q-item>
             </template>
@@ -49,7 +49,7 @@
             transition-prev="slide-down"
             transition-next="slide-up"
           >
-            <template v-for="[name, _] in blocks">
+            <template v-for="[min, max], name in blocks">
               <q-tab-panel :name="name" style="height: 300px">
                 <div class="text-overline text-no-wrap">{{ name }}</div>
                 <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quis praesentium cumque magnam odio iure quidem, quod illum numquam possimus obcaecati commodi minima assumenda consectetur culpa fuga nulla ullam. In, libero.</p>
@@ -65,27 +65,18 @@
 <script>
 import { defineComponent, ref } from 'vue'
 
-const names = [
-  'Basic Latin',
-  'Latin-1 Supplement',
-  'Latin Extended-A',
-  'Latin Extended-B'
-]
-
-const captions = [
-  'U+0000..U+007F',
-  'U+0080..U+00FF',
-  'U+0100..U+017F',
-  'U+0180..U+024F',
-]
+import data from 'assets/unicode.json'
 
 export default defineComponent({
   name: 'Card',
   setup() {
     return {
-      blocks: names.map((name, index) => [name, captions[index]]),
+      blocks: data,
       split: ref(50),
-      tab: ref(names[0]),
+      tab: ref(Object.keys(data)[0]),
+      toCodepoint(number) {
+        return `U+${number.toString(16).padStart(4, '0')}`
+      }
     }
   }
 })
