@@ -21,7 +21,7 @@
       >
         <template #before>
           <q-list>
-            <template v-for="[min, max], name in blocks">
+            <template v-for="[min, max], name in blocks" :key="name">
               <q-item clickable :active="tab == name" @click="tab = name">
                 <q-item-section>
                   <q-item-label>{{ name }}</q-item-label>
@@ -46,13 +46,26 @@
             animated
             swipeable
             vertical
-            transition-prev="slide-down"
-            transition-next="slide-up"
+            transition-prev="jump-down"
+            transition-next="jump-up"
           >
-            <template v-for="[min, max], name in blocks">
+            <template v-for="codepoints, name in blocks" :key="name">
               <q-tab-panel :name="name" style="height: 300px">
                 <div class="text-overline text-no-wrap">{{ name }}</div>
-                <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quis praesentium cumque magnam odio iure quidem, quod illum numquam possimus obcaecati commodi minima assumenda consectetur culpa fuga nulla ullam. In, libero.</p>
+                <div class="row wrap justify-start items-start content-start q-gutter-sm">
+                  <q-intersection
+                    v-for="codepoint in codepoints"
+                    :key="codepoint"
+                    style="width: 100px; height: 100px"
+                  >
+                    <q-card flat bordered class="q-ma-sm">
+                      <q-card-section class="text-center justify-between">
+                        <div class="text-h6">{{ String.fromCodePoint(codepoint) ?? ' '}}</div>
+                        <div class="text-caption">{{ toCodepoint(codepoint) }}</div>
+                      </q-card-section>
+                    </q-card>
+                  </q-intersection>
+                </div>
               </q-tab-panel>
             </template>
           </q-tab-panels>
@@ -67,11 +80,25 @@ import { defineComponent, ref } from 'vue'
 
 import data from 'assets/unicode.json'
 
+function range(min, max) {
+  const array = []
+  for (let x = min; x <= max; x++) {
+    array.push(x)
+  }
+  return array
+}
+
+function mapObject(obj, func) {
+  return Object.fromEntries(
+    Object.entries(obj).map(func)
+  )
+}
+
 export default defineComponent({
   name: 'Card',
   setup() {
     return {
-      blocks: data,
+      blocks: mapObject(data, (([block, [min, max]]) => [block.replaceAll('_', ' '), range(min, max)])),
       split: ref(50),
       tab: ref(Object.keys(data)[0]),
       toCodepoint(number) {
