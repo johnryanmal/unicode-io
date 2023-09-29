@@ -48,24 +48,29 @@
             vertical
             transition-prev="jump-down"
             transition-next="jump-up"
+            style="height: 300px"
           >
-            <template v-for="codepoints, name in blocks" :key="name">
-              <q-tab-panel :name="name" style="height: 300px">
-                <div class="text-overline text-no-wrap">{{ name }}</div>
-                <div class="row wrap justify-start items-start content-start q-gutter-sm">
-                  <q-intersection
-                    v-for="codepoint in codepoints"
-                    :key="codepoint"
-                    style="width: 100px; height: 100px"
-                  >
-                    <q-card flat bordered class="q-ma-sm">
-                      <q-card-section class="text-center justify-between">
-                        <div class="text-h6">{{ String.fromCodePoint(codepoint) ?? ' '}}</div>
-                        <div class="text-caption">{{ toCodepoint(codepoint) }}</div>
-                      </q-card-section>
-                    </q-card>
-                  </q-intersection>
-                </div>
+            <template v-for="[min, max], name in blocks" :key="name">
+              <q-tab-panel :name="name" class="q-pa-none">
+                <q-card-section>
+                  <div class="text-center text-overline text-no-wrap">{{ name }}</div>
+                  <div class="row wrap justify-center items-start content-start q-gutter-sm q-pa-sm">
+                    <q-intersection
+                      v-for="codepoint in range(min, max)"
+                      :key="codepoint"
+                      style="width: 100px; height: 100px"
+                    >
+                      <q-card flat bordered class="q-ma-sm">
+                        <q-responsive :ratio="1">
+                          <q-card-section class="text-center justify-between items-center flex column no-wrap">
+                            <div class="text-h5">{{ String.fromCodePoint(codepoint) }}</div>
+                            <div class="text-caption">{{ toCodepoint(codepoint) }}</div>
+                          </q-card-section>
+                        </q-responsive>
+                      </q-card>
+                    </q-intersection>
+                  </div>
+                </q-card-section>
               </q-tab-panel>
             </template>
           </q-tab-panels>
@@ -80,29 +85,20 @@ import { defineComponent, ref } from 'vue'
 
 import data from 'assets/unicode.json'
 
-function range(min, max) {
-  const array = []
-  for (let x = min; x <= max; x++) {
-    array.push(x)
-  }
-  return array
-}
-
-function mapObject(obj, func) {
-  return Object.fromEntries(
-    Object.entries(obj).map(func)
-  )
-}
-
 export default defineComponent({
   name: 'Card',
   setup() {
     return {
-      blocks: mapObject(data, (([block, [min, max]]) => [block.replaceAll('_', ' '), range(min, max)])),
+      blocks: data,
       split: ref(50),
       tab: ref(Object.keys(data)[0]),
       toCodepoint(number) {
         return `U+${number.toString(16).padStart(4, '0')}`
+      },
+      *range(min, max) {
+        for (let x = min; x <= max; x++) {
+          yield x
+        }
       }
     }
   }
