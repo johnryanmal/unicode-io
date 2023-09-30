@@ -14,10 +14,9 @@
 
       <q-splitter
         v-model="split"
-        style="height: 300px"
+        style="width: 90vw; height: 90vh"
         :limits="[0, 100]"
-        before-class="overflow-scroll text-no-wrap"
-        after-class="overflow-hidden"
+        before-class="text-no-wrap"
       >
         <template #before>
           <q-list>
@@ -44,31 +43,27 @@
           <q-tab-panels
             v-model="tab"
             animated
-            swipeable
-            vertical
             transition-prev="jump-down"
             transition-next="jump-up"
-            style="height: 300px"
+            style="min-width: calc(2 * calc(60px + 1vw))"
           >
             <template v-for="[min, max], name in blocks" :key="name">
               <q-tab-panel :name="name" class="q-pa-none">
                 <q-card-section>
-                  <div class="text-center text-overline text-no-wrap">{{ name }}</div>
-                  <div class="row wrap justify-center items-start content-start q-gutter-sm q-pa-sm">
-                    <q-intersection
-                      v-for="codepoint in range(min, max)"
-                      :key="codepoint"
-                      style="width: 100px; height: 100px"
-                    >
-                      <q-card flat bordered class="q-ma-sm">
-                        <q-responsive :ratio="1">
-                          <q-card-section class="text-center justify-between items-center flex column no-wrap">
-                            <div class="text-h5">{{ String.fromCodePoint(codepoint) }}</div>
-                            <div class="text-caption">{{ toCodepoint(codepoint) }}</div>
-                          </q-card-section>
-                        </q-responsive>
-                      </q-card>
-                    </q-intersection>
+                  <p class="text-center text-overline">{{ name }}</p>
+                  <div class="row wrap justify-center items-start content-start q-gutter-md">
+                    <q-card
+                    v-for="codepoint in range(min, max)"
+                    :key="codepoint"
+                    flat bordered>
+                      <q-card-section
+                        class="text-center justify-around items-center flex column no-wrap q-pa-sm"
+                        style="width: calc(60px + 1vw); height: calc(60px + 1vw)"
+                      >
+                        <div class="text-h5" style="height: 32px">{{ String.fromCodePoint(codepoint) }}</div>
+                        <div class="text-caption">{{ toCodepoint(codepoint) }}</div>
+                      </q-card-section>
+                    </q-card>
                   </div>
                 </q-card-section>
               </q-tab-panel>
