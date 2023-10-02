@@ -388,7 +388,7 @@ const nameExcludes = new Set([
   'Plane 16 Private Use'
 ])
 
-const primaries = Object.fromEntries(Array.from(require('@unicode/unicode-15.1.0/Names').entries()).filter(([codepoint, value]) => !nameExcludes.has(value)))
+const originals = Object.fromEntries(Array.from(require('@unicode/unicode-15.1.0/Names').entries()).filter(([codepoint, value]) => !nameExcludes.has(value)))
 const corrections = require('@unicode/unicode-15.1.0/Names/Correction')
 const controls = require('@unicode/unicode-15.1.0/Names/Control')
 const abbreviations = require('@unicode/unicode-15.1.0/Names/Abbreviation')
@@ -396,7 +396,7 @@ const alternates = require('@unicode/unicode-15.1.0/Names/Alternate')
 const figments = require('@unicode/unicode-15.1.0/Names/Figment')
 
 const names = {}
-for (const data of [primaries, corrections, controls, abbreviations, alternates, figments]) {
+for (const data of [corrections, originals, controls, abbreviations, alternates, figments]) {
   for (const [codepoint, nameData] of Object.entries(data)) {
     if(!names[codepoint]) {
       names[codepoint] = []
