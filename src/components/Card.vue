@@ -19,9 +19,9 @@
         before-class="text-no-wrap"
       >
         <template #before>
-          <q-list>
+          <q-list class="non-selectable">
             <template v-for="[min, max], name in blocks" :key="name">
-              <q-item clickable :active="tab == name" @click="tab = name">
+              <q-item clickable active-class="active-tab" :active="tab == name" @click="tab = name">
                 <q-item-section>
                   <q-item-label>{{ name }}</q-item-label>
                   <q-item-label caption>{{ toCodepoint(min) }}..{{ toCodepoint(max) }}</q-item-label>
@@ -55,14 +55,26 @@
                     <q-card
                     v-for="codepoint in range(min, max)"
                     :key="codepoint"
-                    flat bordered>
+                    flat bordered v-ripple.early class="cursor-pointer q-hoverable non-selectable">
+                      <span class="q-focus-helper"></span>
                       <q-card-section
                         class="text-center justify-around items-center flex column no-wrap q-pa-sm"
                         style="width: calc(60px + 1vw); height: calc(60px + 1vw)"
                       >
-                        <div class="text-h5" style="height: 32px">{{ String.fromCodePoint(codepoint) }}</div>
+                        <div class="text-h5" style="width: 32px; height: 32px">{{ String.fromCodePoint(codepoint) }}</div>
                         <div class="text-caption">{{ toCodepoint(codepoint) }}</div>
                       </q-card-section>
+                      <q-tooltip
+                        ref="tooltip"
+                        class="text-caption"
+                        anchor="bottom middle" self="top middle"
+                        transition-show="scale"
+                        transition-hide="scale"
+                        :delay="1000"
+                        :offset="[0, 5]"
+                      >
+                        {{ names[codepoint]?.[0] ?? name }}
+                      </q-tooltip>
                     </q-card>
                   </div>
                 </q-card-section>
@@ -78,15 +90,17 @@
 <script>
 import { defineComponent, ref } from 'vue'
 
-import data from 'assets/unicode.json'
+import blocks from 'assets/unicode.json'
+import names from 'assets/names.json'
 
 export default defineComponent({
   name: 'Card',
   setup() {
     return {
-      blocks: data,
+      blocks,
+      names,
       split: ref(50),
-      tab: ref(Object.keys(data)[0]),
+      tab: ref(Object.keys(blocks)[0]),
       toCodepoint(number) {
         return `U+${number.toString(16).padStart(4, '0')}`
       },
@@ -99,3 +113,9 @@ export default defineComponent({
   }
 })
 </script>
+
+<style lang="scss" scoped>
+.active-tab {
+  background-color: mix($primary, white, 10%);
+}
+</style>

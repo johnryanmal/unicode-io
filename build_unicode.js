@@ -365,6 +365,45 @@ const blocks = [
   "Znamenny_Musical_Notation"
 ]
 
+const nameExcludes = new Set([
+  '<control>',
+  'Hangul Syllable',
+  'Non Private Use High Surrogate',
+  'Private Use High Surrogate',
+  'Low Surrogate',
+  'Private Use',
+  'Tangut Ideograph',
+  'Tangut Ideograph Supplement',
+  'CJK Ideograph',
+  'CJK Ideograph Extension A',
+  'CJK Ideograph Extension B',
+  'CJK Ideograph Extension C',
+  'CJK Ideograph Extension D',
+  'CJK Ideograph Extension E',
+  'CJK Ideograph Extension F',
+  'CJK Ideograph Extension G',
+  'CJK Ideograph Extension H',
+  'CJK Ideograph Extension I',
+  'Plane 15 Private Use',
+  'Plane 16 Private Use'
+])
+
+const primaries = Object.fromEntries(Array.from(require('@unicode/unicode-15.1.0/Names').entries()).filter(([codepoint, value]) => !nameExcludes.has(value)))
+const corrections = require('@unicode/unicode-15.1.0/Names/Correction')
+const controls = require('@unicode/unicode-15.1.0/Names/Control')
+const abbreviations = require('@unicode/unicode-15.1.0/Names/Abbreviation')
+const alternates = require('@unicode/unicode-15.1.0/Names/Alternate')
+const figments = require('@unicode/unicode-15.1.0/Names/Figment')
+
+const names = {}
+for (const data of [primaries, corrections, controls, abbreviations, alternates, figments]) {
+  for (const [codepoint, nameData] of Object.entries(data)) {
+    if(!names[codepoint]) {
+      names[codepoint] = []
+    }
+    names[codepoint] = names[codepoint].concat(nameData)
+  }
+}
 
 const ranges = {}
 for (const block of blocks) {
@@ -398,3 +437,4 @@ const fs = require('fs')
 // const abbreviation = require('@unicode/unicode-15.1.0/Names/Abbreviation')
 
 fs.writeFileSync('./src/assets/unicode.json', JSON.stringify(data, null, 2))
+fs.writeFileSync('./src/assets/names.json', JSON.stringify(names, null, 2))
