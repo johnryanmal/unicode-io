@@ -17,6 +17,7 @@
         style="width: 90vw; height: 90vh"
         :limits="[0, 100]"
         before-class="text-no-wrap"
+        after-class="tooltip-scroller"
       >
         <template #before>
           <q-list class="non-selectable">
@@ -65,12 +66,12 @@
                         <div class="text-caption">{{ toCodepoint(codepoint) }}</div>
                       </q-card-section>
                       <q-tooltip
-                        ref="tooltip"
+                        scroll-target=".tooltip-scroller"
                         class="text-caption"
                         anchor="bottom middle" self="top middle"
-                        transition-show="scale"
-                        transition-hide="scale"
-                        :delay="1000"
+                        transition-show="fade"
+                        transition-hide="fade"
+                        :delay="300"
                         :offset="[0, 5]"
                       >
                         {{ names[codepoint]?.[0] ?? name }}
