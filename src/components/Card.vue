@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md row items-start q-gutter-md">
+  <div class="q-pa-md row items-start q-gutter-md non-selectable">
     <q-card flat bordered>
 
       <q-item>
@@ -73,7 +73,7 @@
             animated
             transition-prev="jump-down"
             transition-next="jump-up"
-            style="min-width: calc(2 * calc(60px + 1vw))"
+            :style="{ 'min-width': 2*cardSize+'px' }"
           >
             <template
               v-for="[name, [min, max]], panelIndex in Object.entries(blocks)"
@@ -85,16 +85,23 @@
                   <div
                     ref="grid"
                     role="grid"
-                    class="row wrap justify-center items-start content-start q-gutter-md"
+                    class="justify-center"
+                    :style="{
+                      'display': 'grid',
+                      'grid-template-columns': `repeat(auto-fill, ${cardSize}px)`,
+                      'grid-gap': cardGutter+'px'
+                    }"
                   >
                     <q-card
                       v-for="codepoint, cardIndex in range(min, max)"
                       :key="cardIndex"
                       ref="cards"
                       role="presentation"
+                      :style="{
+                        'width': cardSize+'px',
+                        'height': cardSize+'px'
+                      }"
                       flat bordered
-                      class="non-selectable"
-                      style="width: calc(60px + 1vw); height: calc(60px + 1vw)"
                     >
                       <q-item
                         ref="items"
@@ -105,15 +112,34 @@
                             visible = entry.isIntersecting
                           }
                         }"
-                        @focus="card = focused = cardIndex; visble = true"
-                        @blur="focused = null"
-                        @mouseenter="hovered = cardIndex"
-                        @mouseleave="hovered = null"
+
+                        v-on="(
+                          $q.platform.is.desktop
+                            ? {
+                              pointerdown(event) {
+                                if (focused === null) {
+                                  event.preventDefault()
+                                }
+                              },
+                              'focus': () => card = focused = cardIndex,
+                              'blur': () => focused = null,
+                            }
+                            : {
+                              'pointerdown': (event) => event.preventDefault()
+                            }
+                        )"
+                        @pointerenter="hovered = cardIndex"
+                        @pointerleave="hovered = null"
+
                         @keydown="(event) => {
                           const size = max - min + 1
-                          const gridWidth = width(grid[0])
-                          const cardWidth = width(cards[cardIndex].$el)
-                          const columns = Math.floor(gridWidth / cardWidth)
+                          let space = width(grid[0])
+                          let columns = 0
+                          while (space > cardSize) {
+                            space -= cardSize
+                            columns++
+                            space -= cardGutter
+                          }
                           const remainder = size % columns
 
                           switch (event.code) {
@@ -152,8 +178,9 @@
                               break
                           }
                         }"
-                        v-ripple
+                        v-ripple.center
                         class="fit text-center justify-around items-center flex column no-wrap q-pa-sm"
+                        style="touch-action: manipulation"
                       >
                         <div class="text-h5" style="width: 32px; height: 32px">{{ String.fromCodePoint(codepoint) }}</div>
                         <div class="text-caption">{{ toCodepoint(codepoint) }}</div>
@@ -162,7 +189,7 @@
                         no-parent-event
                         ref="tooltips"
                         scroll-target=".tooltip-scroller"
-                        class="text-caption text-uppercase"
+                        class="text-caption text-uppercase non-selectable"
                         v-bind="(
                           $q.platform.is.mobile
                             ? {
@@ -193,7 +220,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed } from 'vue'
+import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 import blocks from 'assets/unicode.json'
 import names from 'assets/names.json'
@@ -203,6 +230,20 @@ import { dom } from 'quasar'
 export default defineComponent({
   name: 'Card',
   setup() {
+    const innerHeight = ref(window.innerHeight)
+    function onResize() {
+      innerHeight.value = window.innerHeight
+    }
+    const vw = computed(() => innerHeight.value/100)
+
+    onMounted(() => {{
+      window.addEventListener('resize', onResize)
+    }})
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('resize', onResize)
+    })
+
     const tooltips = ref([])
 
     let tooltip = ref(null)
@@ -212,11 +253,10 @@ export default defineComponent({
 
     function updateTooltip() {
       const next = (_visible.value ? _focused.value : null) ?? _hovered.value
-      if (tooltip.value !== next) {
-        tooltips.value[tooltip.value]?.hide()
-        tooltips.value[next]?.show()
-        tooltip.value = next
-      }
+
+      tooltips.value[tooltip.value]?.hide()
+      tooltips.value[next]?.show()
+      tooltip.value = next
     }
 
     const visible = computed({
@@ -259,6 +299,10 @@ export default defineComponent({
       }
     })
 
+    const cardSize = computed(() => Math.floor(60 + vw.value))
+    const cardGutter = computed(() => Math.floor(2*vw.value))
+    const cardSpace = computed(() => cardSize.value + cardGutter.value)
+
     return {
       blocks,
       names,
@@ -271,6 +315,9 @@ export default defineComponent({
       focused,
       hovered,
       visible,
+      cardSize,
+      cardGutter,
+      cardSpace,
       card: ref(0),
       cards: ref([]),
       items: ref([]),
