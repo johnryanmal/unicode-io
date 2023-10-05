@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md row items-start q-gutter-md">
+  <div class="q-pa-md row items-start q-gutter-md non-selectable">
     <q-card flat bordered>
 
       <q-item>
@@ -14,13 +14,14 @@
 
       <q-splitter
         v-model="split"
+        :horizontal="$q.screen.lt.md"
         style="width: 90vw; height: 90vh"
         :limits="[0, 100]"
         before-class="text-no-wrap"
         after-class="tooltip-scroller"
       >
         <template #before>
-          <q-list class="non-selectable">
+          <q-list>
             <template v-for="[min, max], name in blocks" :key="name">
               <q-item clickable active-class="active-tab" :active="tab == name" @click="tab = name">
                 <q-item-section>
@@ -56,7 +57,7 @@
                     <q-card
                     v-for="codepoint in range(min, max)"
                     :key="codepoint"
-                    flat bordered v-ripple.early class="cursor-pointer q-hoverable non-selectable">
+                    flat bordered v-ripple class="cursor-pointer q-hoverable">
                       <span class="q-focus-helper"></span>
                       <q-card-section
                         class="text-center justify-around items-center flex column no-wrap q-pa-sm"
@@ -67,12 +68,22 @@
                       </q-card-section>
                       <q-tooltip
                         scroll-target=".tooltip-scroller"
-                        class="text-caption"
-                        anchor="bottom middle" self="top middle"
+                        class="text-caption text-uppercase"
+                        v-bind="(
+                          $q.platform.is.mobile
+                            ? {
+                              anchor: 'top middle',
+                              self: 'bottom middle'
+                            }
+                            : {
+                              anchor: 'bottom middle',
+                              self: 'top middle'
+                            }
+                        )"
                         transition-show="fade"
                         transition-hide="fade"
                         :delay="300"
-                        :offset="[0, 5]"
+                        :offset="[0, 6]"
                       >
                         {{ names[codepoint]?.[0] ?? name }}
                       </q-tooltip>
