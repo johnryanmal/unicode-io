@@ -29,6 +29,17 @@
               :active="activeTab === index"
               :tabindex="(tab === index) ? 0 : -1"
               @click="activeTab = index"
+              v-on="(
+                $q.platform.is.desktop
+                  ? {
+                    pointerdown(event) {
+                      if (focused === null) {
+                        event.preventDefault()
+                      }
+                    }
+                  }
+                  : {}
+              )"
               @focus="tab = index"
               @keydown="(event) => {
                 const size = Object.keys(blocks).length
@@ -97,6 +108,7 @@
                       ref="items"
                       :tabindex="(card === cardIndex) ? 0 : -1"
                       clickable
+                      @click="textarea.setRangeText(String.fromCodePoint(codepoint), textarea.selectionStart, textarea.selectionEnd, 'end'); text = textarea.value"
                       v-intersection="(entry) => {
                         if (focused === cardIndex) {
                           visible = entry.isIntersecting
@@ -181,7 +193,7 @@
                       scroll-target=".tooltip-scroller"
                       class="text-caption text-uppercase non-selectable"
                       v-bind="(
-                        $q.platform.is.mobile
+                        $q.screen.lt.md
                           ? {
                             anchor: 'top middle',
                             self: 'bottom middle'
@@ -207,9 +219,12 @@
     </q-splitter>
   </q-card>
 
-  <q-card flat bordered style="flex: 1 1 0px; overflow: hidden">
+  <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="flex: 1 1 0px; overflow: hidden; transition: all var(--q-transition-duration) ease-in-out;">
     <textarea
+      ref="textarea"
       class="fit"
+      @focus="editing = true"
+      @blur="editing = false"
       style="border: none; outline: none; resize: none"
       placeholder="Type in or paste text here"
       v-model="text"
@@ -229,20 +244,6 @@ const { width } = dom
 export default defineComponent({
   name: 'Card',
   setup() {
-    const innerHeight = ref(window.innerHeight)
-    function onResize() {
-      innerHeight.value = window.innerHeight
-    }
-    const vw = computed(() => innerHeight.value/100)
-
-    onMounted(() => {
-      window.addEventListener('resize', onResize)
-    })
-
-    onBeforeUnmount(() => {
-      window.removeEventListener('resize', onResize)
-    })
-
     const tooltips = ref([])
 
     let tooltip = ref(null)
@@ -253,9 +254,13 @@ export default defineComponent({
     function updateTooltip() {
       const next = (_visible.value ? _focused.value : null) ?? _hovered.value
 
-      tooltips.value[tooltip.value]?.hide()
-      tooltips.value[next]?.show()
-      tooltip.value = next
+      if (next === tooltip.value) {
+        tooltips.value[tooltip.value]?.updatePosition()
+      } else {
+        tooltips.value[tooltip.value]?.hide()
+        tooltips.value[next]?.show()
+        tooltip.value = next
+      }
     }
 
     const visible = computed({
@@ -298,6 +303,29 @@ export default defineComponent({
       }
     })
 
+    function onFrame() {
+      updateTooltip()
+      window.requestAnimationFrame(onFrame)
+    }
+
+    const innerHeight = ref(window.innerHeight)
+    function onResize() {
+      innerHeight.value = window.innerHeight
+      tooltips[tooltip.value]?.hide()
+      tooltips[tooltip.value]?.show()
+    }
+    const vw = computed(() => innerHeight.value/100)
+
+    onMounted(() => {
+      window.addEventListener('resize', onResize)
+      onFrame()
+    })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('resize', onResize)
+      window.cancelAnimationFrame(onFrame)
+    })
+
     const cardSize = computed(() => Math.floor(60 + vw.value))
     const cardGutter = computed(() => Math.floor(2*vw.value))
     const cardSpace = computed(() => cardSize.value + cardGutter.value)
@@ -322,6 +350,8 @@ export default defineComponent({
       items: ref([]),
       grid: ref(null),
       text: ref(''),
+      editing: ref(true),
+      textarea: ref(null),
       toCodepoint(number) {
         return `U+${number.toString(16).padStart(4, '0')}`
       },
@@ -341,5 +371,8 @@ export default defineComponent({
 <style lang="scss" scoped>
 .active-tab {
   background-color: mix($primary, white, 10%);
+}
+.active-card {
+  border-color: $primary;
 }
 </style>
