@@ -1,5 +1,5 @@
 <template>
-  <q-card class="non-selectable" flat bordered style="display: inline-flex; flex-direction: column; flex: 1 1 0px; overflow: hidden; touch-action: pan-y">
+  <q-card class="non-selectable" flat bordered style="display: inline-flex; flex-direction: column; flex: 2 1 0px; overflow: hidden; touch-action: pan-y">
     <q-item>
       <q-item-section>
         <q-item-label>Unicode Codepoints</q-item-label>
@@ -82,7 +82,7 @@
               :key="panelIndex"
             >
               <q-tab-panel :name="panelIndex" class="q-pa-none">
-                <q-card-section>
+                <q-card-section :style="{ 'padding': cardGutter+'px' }">
                   <p class="text-center text-overline">{{ name }}</p>
                   <div
                     ref="grid"
@@ -312,30 +312,34 @@ export default defineComponent({
 
     const splitparent = ref(null)
     const splitheight = ref(0)
+    const splitobserver = new ResizeObserver((entries) => {
+      splitheight.value = entries[0].contentRect.height
+    })
 
-    const innerHeight = ref(0)
+    const innerWidth = ref(0)
     function onResize() {
-      innerHeight.value = window.innerHeight
+      innerWidth.value = window.innerWidth
 
       splitheight.value = height(splitparent.value)
       tooltips.value[tooltip.value]?.updatePosition()
     }
-    const vw = computed(() => innerHeight.value/100)
+    const vw = computed(() => innerWidth.value/100)
 
     onMounted(() => {
       window.addEventListener('resize', onResize)
       onResize()
       onFrame()
+      splitobserver.observe(splitparent.value)
     })
 
     onBeforeUnmount(() => {
       window.removeEventListener('resize', onResize)
       window.cancelAnimationFrame(onFrame)
+      splitobserver.unobserve(splitparent.value)
     })
 
-    const cardSize = computed(() => Math.floor(60 + vw.value))
-    const cardGutter = computed(() => Math.floor(2*vw.value))
-    const cardSpace = computed(() => cardSize.value + cardGutter.value)
+    const cardSize = computed(() => 60 + 2/3*vw.value)
+    const cardGutter = computed(() => cardSize.value / 5)
 
     return {
       blocks,
@@ -351,13 +355,12 @@ export default defineComponent({
       visible,
       cardSize,
       cardGutter,
-      cardSpace,
       card: ref(0),
       cards: ref([]),
       items: ref([]),
       grid: ref(null),
       text: ref(''),
-      editing: ref(true),
+      editing: ref(false),
       textarea: ref(null),
       splitheight,
       splitparent,
