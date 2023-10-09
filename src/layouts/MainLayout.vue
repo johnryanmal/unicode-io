@@ -1,7 +1,7 @@
 <template>
   <q-layout>
     <q-page-container>
-      <router-view />
+      <router-view class="column items-stretch q-pt-md q-px-md q-gutter-md"/>
     </q-page-container>
   </q-layout>
 </template>
