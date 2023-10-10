@@ -239,11 +239,11 @@
             ref="textarea"
             class="fit"
             @focus="editing = true"
-            @blur="editing = false"
+            @blur="editing = false; inputmode = 'none'"
             style="border: none; outline: none; resize: none; position: absolute"
             placeholder="Type in or paste text here"
             v-model="text"
-            inputmode="none"
+            :inputmode="inputmode"
           ></textarea>
         </div>
       </q-item>
@@ -265,6 +265,7 @@
             setCursor(textarea, start-1)
           }
         }"/>
+        <q-btn flat round icon="keyboard" @click="inputmode = 'text'; textarea.focus()"/>
         <q-btn flat round icon="delete" @click="text = ''"/>
       </q-card-actions>
   </q-card>
@@ -397,6 +398,7 @@ export default defineComponent({
       grid: ref(null),
       text: ref(''),
       editing: ref(false),
+      inputmode: ref('none'),
       textarea: ref(null),
       splitheight,
       splitparent,

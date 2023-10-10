@@ -4,3 +4,7 @@ html {
   overflow: hidden;
   overscroll-behavior: none;
 }
+
+.q-btn {
+  touch-action: manipulation;
+}
