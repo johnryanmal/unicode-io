@@ -264,9 +264,39 @@
             text = text.substring(0, start-1) + text.substring(start)
             setCursor(textarea, start-1)
           }
-        }"/>
-        <q-btn flat round icon="keyboard" @click="inputmode = 'text'; textarea.focus()"/>
-        <q-btn flat round icon="delete" @click="text = ''"/>
+        }">
+          <q-tooltip
+            class="text-caption non-selectable"
+            anchor="center left"
+            self="center right"
+            transition-show="fade"
+            transition-hide="fade"
+          >
+            Delete Characters
+          </q-tooltip>
+        </q-btn>
+        <q-btn flat round icon="keyboard" @click="inputmode = 'text'; textarea.focus()">
+          <q-tooltip
+            class="text-caption non-selectable"
+            anchor="center left"
+            self="center right"
+            transition-show="fade"
+            transition-hide="fade"
+          >
+            Open Virtual Keyboard
+          </q-tooltip>
+        </q-btn>
+        <q-btn flat round icon="delete" @click="text = ''">
+          <q-tooltip
+            class="text-caption non-selectable"
+            anchor="center left"
+            self="center right"
+            transition-show="fade"
+            transition-hide="fade"
+          >
+            Clear Text
+          </q-tooltip>
+        </q-btn>
       </q-card-actions>
   </q-card>
 </template>
