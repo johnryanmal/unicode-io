@@ -109,7 +109,18 @@
                         ref="items"
                         :tabindex="(card === cardIndex) ? 0 : -1"
                         clickable
-                        @click="textarea.setRangeText(String.fromCodePoint(codepoint), textarea.selectionStart, textarea.selectionEnd, 'end'); text = textarea.value"
+                        @click="(event) => {
+                          if (event.detail !== 0) {
+                            // focus text area only if it was clicked
+                            textarea.focus()
+                          }
+                          const start = textarea.selectionStart
+                          const end = textarea.selectionEnd
+
+                          const char = String.fromCodePoint(codepoint)
+                          text = text.substring(0, start) + char + text.substring(end)
+                          setCursor(textarea, start+1)
+                        }"
                         v-intersection="(entry) => {
                           if (focused === cardIndex) {
                             visible = entry.isIntersecting
@@ -221,21 +232,46 @@
     </div>
   </q-card>
 
-  <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="flex: 1 1 0px; overflow: hidden; transition: all var(--q-transition-duration) ease-in-out;">
-    <textarea
-      ref="textarea"
-      class="fit"
-      @focus="editing = true"
-      @blur="editing = false"
-      style="border: none; outline: none; resize: none; position: absolute"
-      placeholder="Type in or paste text here"
-      v-model="text"
-    ></textarea>
+  <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="display: inline-flex; flex-direction: row; flex: 1 1 0px; overflow: hidden; transition: all var(--q-transition-duration) ease-in-out">
+      <q-item class="q-pr-none" style="display: flex; flex-grow: 1">
+        <div class="fit" style="position: relative">
+          <textarea
+            ref="textarea"
+            class="fit"
+            @focus="editing = true"
+            @blur="editing = false"
+            style="border: none; outline: none; resize: none; position: absolute"
+            placeholder="Type in or paste text here"
+            v-model="text"
+            inputmode="none"
+          ></textarea>
+        </div>
+      </q-item>
+
+      <q-card-actions vertical class="justify-between">
+        <q-btn flat round icon="backspace" @click="(event) => {
+          if (event.detail !== 0) {
+            // focus text area only if it was clicked
+            textarea.focus()
+          }
+          const start = textarea.selectionStart
+          const end = textarea.selectionEnd
+
+          if (start !== end) {
+            text = text.substring(0, start) + text.substring(end)
+            setCursor(textarea, start)
+          } else if (start > 0) {
+            text = text.substring(0, start-1) + text.substring(start)
+            setCursor(textarea, start-1)
+          }
+        }"/>
+        <q-btn flat round icon="delete" @click="text = ''"/>
+      </q-card-actions>
   </q-card>
 </template>
 
 <script>
-import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { defineComponent, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 import blocks from 'assets/unicode.json'
 import names from 'assets/names.json'
@@ -374,7 +410,12 @@ export default defineComponent({
         }
         return array
       },
-      width
+      width,
+      setCursor(el, pos) {
+        nextTick(() => {
+          el.setSelectionRange(pos, pos)
+        })
+      }
     }
   }
 })
