@@ -1,6 +1,6 @@
 <template>
   <q-card class="non-selectable" flat bordered style="display: inline-flex; flex-direction: column; flex: 2 1 0px; overflow: hidden; touch-action: pan-y">
-    <q-item>
+    <!-- <q-item class="desktop-only">
       <q-item-section>
         <q-item-label>Unicode Codepoints</q-item-label>
         <q-item-label caption>
@@ -8,7 +8,7 @@
         </q-item-label>
       </q-item-section>
     </q-item>
-    <q-separator horizontal/>
+    <q-separator horizontal class="desktop-only"/> -->
 
     <div ref="splitparent" style="flex: 1 1 0px; min-height: 0; width: 100%">
       <q-splitter
@@ -241,7 +241,7 @@
             @focus="editing = true"
             @blur="editing = false; inputmode = 'none'"
             style="border: none; outline: none; resize: none; position: absolute"
-            placeholder="Type in or paste text here"
+            :placeholder="'Type in or use the buttons above to insert text here.\n\n(Those on a mobile device may find the keyboard button at the right useful.)'"
             v-model="text"
             :inputmode="inputmode"
           ></textarea>
@@ -271,8 +271,9 @@
             self="center right"
             transition-show="fade"
             transition-hide="fade"
+            :delay="500"
           >
-            Delete Characters
+            Backspace
           </q-tooltip>
         </q-btn>
         <q-btn flat round icon="keyboard" @click="inputmode = 'text'; textarea.focus()">
@@ -282,8 +283,9 @@
             self="center right"
             transition-show="fade"
             transition-hide="fade"
+            :delay="500"
           >
-            Open Virtual Keyboard
+            Open Keyboard
           </q-tooltip>
         </q-btn>
         <q-btn flat round icon="delete" @click="text = ''">
@@ -293,8 +295,9 @@
             self="center right"
             transition-show="fade"
             transition-hide="fade"
+            :delay="500"
           >
-            Clear Text
+            Delete Text
           </q-tooltip>
         </q-btn>
       </q-card-actions>
