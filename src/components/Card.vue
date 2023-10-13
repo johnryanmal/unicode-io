@@ -29,7 +29,7 @@
                 active-class="active-tab"
                 :active="activeTab === index"
                 :tabindex="(tab === index) ? 0 : -1"
-                @click="activeTab = index"
+                @click="activeTab = index; page = 1"
                 v-on="(
                   $q.platform.is.desktop
                     ? {
@@ -75,7 +75,7 @@
             animated
             transition-prev="jump-down"
             transition-next="jump-up"
-            :style="{ 'min-width': 2*cardSize+'px' }"
+            :style="{ 'min-width': 4*cardSize+5*cardGutter+'px' }"
           >
             <template
               v-for="[name, [min, max]], panelIndex in Object.entries(blocks)"
@@ -83,7 +83,18 @@
             >
               <q-tab-panel :name="panelIndex" class="q-pa-none">
                 <q-card-section :style="{ 'padding': cardGutter+'px' }">
-                  <p class="text-center text-overline">{{ name }}</p>
+                  <div class="column items-center" :style="{ 'padding-bottom': cardGutter+'px' }">
+                    <div class="text-center text-overline">{{ name }}</div>
+                    <q-item-label caption>{{ paginate(min, max, 256, page).map(toCodepoint).join('..') }}</q-item-label>
+                    <q-pagination
+                      v-if="pages(min, max, 256) > 1"
+                      v-model="page"
+                      :min="1"
+                      :max="pages(min, max, 256)"
+                      input
+                    />
+                  </div>
+
                   <div
                     ref="grid"
                     role="grid"
@@ -95,7 +106,7 @@
                     }"
                   >
                     <q-card
-                      v-for="codepoint, cardIndex in range(min, max)"
+                      v-for="codepoint, cardIndex in range(...paginate(min, max, 256, page))"
                       :key="cardIndex"
                       ref="cards"
                       role="presentation"
@@ -313,6 +324,27 @@ import names from 'assets/names.json'
 import { dom } from 'quasar'
 const { width, height } = dom
 
+
+function range(min, max) {
+  const array = []
+  for (let x = min; x <= max; x++) {
+    array.push(x)
+  }
+  return array
+}
+
+function pages(min, max, size) {
+  const length = max - min + 1
+  return Math.ceil(length / size)
+}
+
+function paginate(min, max, size, page) {
+  const index = page - 1
+  const first = min + size*index
+  const last = Math.min(first + size - 1, max)
+  return [first, last]
+}
+
 export default defineComponent({
   name: 'Card',
   setup() {
@@ -438,13 +470,10 @@ export default defineComponent({
       toCodepoint(number) {
         return `U+${number.toString(16).padStart(4, '0')}`
       },
-      range(min, max) {
-        const array = []
-        for (let x = min; x <= max; x++) {
-          array.push(x)
-        }
-        return array
-      },
+      range,
+      page: ref(1),
+      pages,
+      paginate,
       width,
       setCursor(el, pos) {
         nextTick(() => {
