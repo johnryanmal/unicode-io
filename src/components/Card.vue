@@ -243,12 +243,18 @@
     </div>
   </q-card>
 
-  <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="display: inline-flex; flex-direction: row; flex: 1 1 0px; overflow: hidden; transition: all var(--q-transition-duration) ease-in-out">
+  <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="display: inline-flex; flex-direction: row; flex: 1 1 0px; overflow: hidden; transition: all var(--q-transition-duration) ease-in-out"
+    @pointerdown="(event) => {
+      event.preventDefault()
+    }"
+    @click="textarea.focus()"
+  >
       <q-item class="q-pr-none" style="display: flex; flex-grow: 1">
         <div class="fit" style="position: relative">
           <textarea
             ref="textarea"
             class="fit"
+            @pointerdown.stop
             @focus="editing = true"
             @blur="editing = false; inputmode = 'none'"
             style="border: none; outline: none; resize: none; position: absolute"
@@ -260,7 +266,7 @@
       </q-item>
 
       <q-card-actions vertical class="justify-between">
-        <q-btn flat round icon="backspace" @click="(event) => {
+        <q-btn flat round icon="backspace" @click.stop="(event) => {
           if (event.detail !== 0) {
             // focus text area only if it was clicked
             textarea.focus()
@@ -287,7 +293,8 @@
             Backspace
           </q-tooltip>
         </q-btn>
-        <q-btn flat round icon="keyboard" @click="inputmode = 'text'; textarea.focus()">
+
+        <q-btn v-if="editing" flat round icon="add_circle" @click.stop>
           <q-tooltip
             class="text-caption non-selectable"
             anchor="center left"
@@ -296,10 +303,11 @@
             transition-hide="fade"
             :delay="500"
           >
-            Open Keyboard
+            Join Selection (U+200B)
           </q-tooltip>
         </q-btn>
-        <q-btn flat round icon="delete" @click="text = ''">
+
+        <q-btn v-if="editing" flat round icon="pending" @click.stop>
           <q-tooltip
             class="text-caption non-selectable"
             anchor="center left"
@@ -308,7 +316,32 @@
             transition-hide="fade"
             :delay="500"
           >
-            Delete Text
+            Split Selection (U+200B)
+          </q-tooltip>
+        </q-btn>
+
+        <q-btn flat round :icon="(editing ? 'delete' : 'keyboard')"
+          @click.stop="() => {
+            if (editing) {
+              //delete text
+              text = ''
+              textarea.blur()
+            } else {
+              //open keyboard
+              inputmode = 'text'
+              textarea.focus()
+            }
+          }"
+        >
+          <q-tooltip
+            class="text-caption non-selectable"
+            anchor="center left"
+            self="center right"
+            transition-show="fade"
+            transition-hide="fade"
+            :delay="500"
+          >
+            {{ editing ? 'Delete Text' : 'Open Keyboard' }}
           </q-tooltip>
         </q-btn>
       </q-card-actions>
@@ -468,7 +501,7 @@ export default defineComponent({
       splitheight,
       splitparent,
       toCodepoint(number) {
-        return `U+${number.toString(16).padStart(4, '0')}`
+        return `U+${number.toString(16).toUpperCase().padStart(4, '0')}`
       },
       range,
       page: ref(1),
