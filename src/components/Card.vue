@@ -130,7 +130,7 @@
 
                           const char = String.fromCodePoint(codepoint)
                           text = text.substring(0, start) + char + text.substring(end)
-                          setCursor(textarea, start+1)
+                          setCursor(textarea, start + char.length)
                         }"
                         v-intersection="(entry) => {
                           if (focused === cardIndex) {
