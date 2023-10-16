@@ -249,102 +249,102 @@
     }"
     @click="textarea.focus()"
   >
-      <q-item class="q-pr-none" style="display: flex; flex-grow: 1">
-        <div class="fit" style="position: relative">
-          <textarea
-            ref="textarea"
-            class="fit"
-            @pointerdown.stop
-            @focus="editing = true"
-            @blur="editing = false; inputmode = 'none'"
-            style="border: none; outline: none; resize: none; position: absolute"
-            :placeholder="'Type in or use the buttons above to insert text here.\n\n(Those on a mobile device may find the keyboard button at the right useful.)'"
-            v-model="text"
-            :inputmode="inputmode"
-          ></textarea>
-        </div>
-      </q-item>
+    <q-item class="q-pr-none" style="display: flex; flex-grow: 1">
+      <div class="fit" style="position: relative">
+        <textarea
+          ref="textarea"
+          class="fit"
+          @pointerdown.stop
+          @focus="editing = true"
+          @blur="editing = false; inputmode = 'none'"
+          style="border: none; outline: none; resize: none; position: absolute"
+          :placeholder="'Type in or use the buttons above to insert text here.\n\n(Those on a mobile device may find the keyboard button at the right useful.)'"
+          v-model="text"
+          :inputmode="inputmode"
+        ></textarea>
+      </div>
+    </q-item>
 
-      <q-card-actions vertical class="justify-between">
-        <q-btn flat round icon="backspace" @click.stop="(event) => {
-          if (event.detail !== 0) {
-            // focus text area only if it was clicked
+    <q-card-actions vertical class="justify-between">
+      <q-btn flat round icon="backspace" @click.stop="(event) => {
+        if (event.detail !== 0) {
+          // focus text area only if it was clicked
+          textarea.focus()
+        }
+        const start = textarea.selectionStart
+        const end = textarea.selectionEnd
+
+        if (start !== end) {
+          text = text.substring(0, start) + text.substring(end)
+          setCursor(textarea, start)
+        } else if (start > 0) {
+          text = text.substring(0, start-1) + text.substring(start)
+          setCursor(textarea, start-1)
+        }
+      }">
+        <q-tooltip
+          class="text-caption non-selectable"
+          anchor="center left"
+          self="center right"
+          transition-show="fade"
+          transition-hide="fade"
+          :delay="500"
+        >
+          Backspace
+        </q-tooltip>
+      </q-btn>
+
+      <q-btn v-if="editing" flat round icon="add_circle" @click.stop>
+        <q-tooltip
+          class="text-caption non-selectable"
+          anchor="center left"
+          self="center right"
+          transition-show="fade"
+          transition-hide="fade"
+          :delay="500"
+        >
+          Join Selection (U+200B)
+        </q-tooltip>
+      </q-btn>
+
+      <q-btn v-if="editing" flat round icon="pending" @click.stop>
+        <q-tooltip
+          class="text-caption non-selectable"
+          anchor="center left"
+          self="center right"
+          transition-show="fade"
+          transition-hide="fade"
+          :delay="500"
+        >
+          Split Selection (U+200B)
+        </q-tooltip>
+      </q-btn>
+
+      <q-btn flat round :icon="(editing ? 'delete' : 'keyboard')"
+        @click.stop="() => {
+          if (editing) {
+            //delete text
+            text = ''
+            textarea.blur()
+          } else {
+            //open keyboard
+            inputmode = 'text'
             textarea.focus()
           }
-          const start = textarea.selectionStart
-          const end = textarea.selectionEnd
-
-          if (start !== end) {
-            text = text.substring(0, start) + text.substring(end)
-            setCursor(textarea, start)
-          } else if (start > 0) {
-            text = text.substring(0, start-1) + text.substring(start)
-            setCursor(textarea, start-1)
-          }
-        }">
-          <q-tooltip
-            class="text-caption non-selectable"
-            anchor="center left"
-            self="center right"
-            transition-show="fade"
-            transition-hide="fade"
-            :delay="500"
-          >
-            Backspace
-          </q-tooltip>
-        </q-btn>
-
-        <q-btn v-if="editing" flat round icon="add_circle" @click.stop>
-          <q-tooltip
-            class="text-caption non-selectable"
-            anchor="center left"
-            self="center right"
-            transition-show="fade"
-            transition-hide="fade"
-            :delay="500"
-          >
-            Join Selection (U+200B)
-          </q-tooltip>
-        </q-btn>
-
-        <q-btn v-if="editing" flat round icon="pending" @click.stop>
-          <q-tooltip
-            class="text-caption non-selectable"
-            anchor="center left"
-            self="center right"
-            transition-show="fade"
-            transition-hide="fade"
-            :delay="500"
-          >
-            Split Selection (U+200B)
-          </q-tooltip>
-        </q-btn>
-
-        <q-btn flat round :icon="(editing ? 'delete' : 'keyboard')"
-          @click.stop="() => {
-            if (editing) {
-              //delete text
-              text = ''
-              textarea.blur()
-            } else {
-              //open keyboard
-              inputmode = 'text'
-              textarea.focus()
-            }
-          }"
+        }"
+      >
+        <q-tooltip
+          class="text-caption non-selectable"
+          anchor="center left"
+          self="center right"
+          transition-show="fade"
+          transition-hide="fade"
+          :delay="500"
         >
-          <q-tooltip
-            class="text-caption non-selectable"
-            anchor="center left"
-            self="center right"
-            transition-show="fade"
-            transition-hide="fade"
-            :delay="500"
-          >
-            {{ editing ? 'Delete Text' : 'Open Keyboard' }}
-          </q-tooltip>
-        </q-btn>
-      </q-card-actions>
+          {{ editing ? 'Delete Text' : 'Open Keyboard' }}
+        </q-tooltip>
+      </q-btn>
+    </q-card-actions>
   </q-card>
 </template>
 
