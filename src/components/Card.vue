@@ -121,7 +121,7 @@
                         :tabindex="(card === cardIndex) ? 0 : -1"
                         clickable
                         @click="(event) => {
-                          if (event.detail !== 0) {
+                          if ('click', event.detail !== 0) {
                             // focus text area only if it was clicked
                             textarea.focus()
                           }
@@ -243,29 +243,38 @@
     </div>
   </q-card>
 
-  <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="display: inline-flex; flex-direction: row; flex: 1 1 0px; overflow: hidden; transition: all var(--q-transition-duration) ease-in-out"
+  <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="display: inline-flex; flex-direction: column; flex: 1 1 0px; overflow: hidden; transition: all var(--q-transition-duration) ease-in-out; min-height: 50px"
     @pointerdown="(event) => {
       event.preventDefault()
     }"
     @click="textarea.focus()"
   >
-    <q-item class="q-pr-none" style="display: flex; flex-grow: 1">
-      <div class="fit" style="position: relative">
-        <textarea
-          ref="textarea"
-          class="fit"
-          @pointerdown.stop
-          @focus="editing = true"
-          @blur="editing = false; inputmode = 'none'"
-          style="border: none; outline: none; resize: none; position: absolute"
-          :placeholder="'Type in or use the buttons above to insert text here.\n\n(Those on a mobile device may find the keyboard button at the right useful.)'"
-          v-model="text"
-          :inputmode="inputmode"
-        ></textarea>
-      </div>
-    </q-item>
+    <div style="display: flex; flex-grow: 1; position: relative">
+      <textarea
+        ref="textarea"
+        class="fit q-px-md q-py-sm"
+        @pointerdown.stop
+        @focus="editing = true"
+        @blur="editing = false; inputmode = 'none'; keyboard = false"
+        style="border: none; outline: none; resize: none; position: absolute; padding-bottom: calc(1em + 4px)"
+        :placeholder="'Type in or use the buttons above to insert text here.\n\n(Those on a mobile device may find the keyboard button useful.)'"
+        v-model="text"
+        :inputmode="inputmode"
+      ></textarea>
+    </div>
 
-    <q-card-actions vertical class="justify-between">
+    <div v-if="!$q.screen.lt.md" class="text-caption" style="position: absolute; bottom: 0px; left: 0px; padding-left: 4px; background-color: rgb(255, 255, 255, 0.8); pointer-events: none">
+      <span>
+        {{ codepoints(text).length }} codepoints ({{ nonSurrogates(text).length }} non-surrogates, {{ surrogatePairs(text).length }} surrogate pairs, {{ loneSurrogates(text).length }} lone surrogates), {{ text.length }} code units (Encoding: UTF-16)
+      </span>
+    </div>
+
+    <div
+      style="position: absolute; bottom: 4px; right: 4px; display: flex; flex-direction: row-reverse; justify-content: end; align-items: end; gap: 4px; background-color: rgb(255, 255, 255, 0.8); border-radius: max(100vw, 100vh)"
+      :style="{
+        'gap': cardGutter+'px'
+      }"
+    >
       <q-btn flat round icon="backspace" @click.stop="(event) => {
         if (event.detail !== 0) {
           // focus text area only if it was clicked
@@ -284,8 +293,8 @@
       }">
         <q-tooltip
           class="text-caption non-selectable"
-          anchor="center left"
-          self="center right"
+          anchor="top middle"
+          self="bottom middle"
           transition-show="fade"
           transition-hide="fade"
           :delay="500"
@@ -294,11 +303,53 @@
         </q-tooltip>
       </q-btn>
 
+      <q-btn flat round :icon="keyboard ? 'keyboard_hide' : 'keyboard'"
+        @click.stop="() => {
+          if (keyboard) {
+            //hide keyboard
+            textarea.blur()
+          } else {
+            //show keyboard
+            inputmode = 'text'
+            keyboard = true
+            textarea.focus()
+          }
+        }"
+      >
+        <q-tooltip
+          class="text-caption non-selectable"
+          anchor="top middle"
+          self="bottom middle"
+          transition-show="fade"
+          transition-hide="fade"
+          :delay="500"
+        >
+          {{ keyboard ? 'Hide Keyboard' : 'Show Keyboard' }}
+        </q-tooltip>
+      </q-btn>
+
+      <q-btn v-if="editing" flat round icon="delete"
+        @click.stop="() => {
+          text = ''
+        }"
+      >
+        <q-tooltip
+          class="text-caption non-selectable"
+          anchor="top middle"
+          self="bottom middle"
+          transition-show="fade"
+          transition-hide="fade"
+          :delay="500"
+        >
+          Delete Text
+        </q-tooltip>
+      </q-btn>
+
       <q-btn v-if="editing" flat round icon="add_circle" @click.stop>
         <q-tooltip
           class="text-caption non-selectable"
-          anchor="center left"
-          self="center right"
+          anchor="top middle"
+          self="bottom middle"
           transition-show="fade"
           transition-hide="fade"
           :delay="500"
@@ -310,8 +361,8 @@
       <q-btn v-if="editing" flat round icon="pending" @click.stop>
         <q-tooltip
           class="text-caption non-selectable"
-          anchor="center left"
-          self="center right"
+          anchor="top middle"
+          self="bottom middle"
           transition-show="fade"
           transition-hide="fade"
           :delay="500"
@@ -319,32 +370,7 @@
           Split Selection (U+200B)
         </q-tooltip>
       </q-btn>
-
-      <q-btn flat round :icon="(editing ? 'delete' : 'keyboard')"
-        @click.stop="() => {
-          if (editing) {
-            //delete text
-            text = ''
-            textarea.blur()
-          } else {
-            //open keyboard
-            inputmode = 'text'
-            textarea.focus()
-          }
-        }"
-      >
-        <q-tooltip
-          class="text-caption non-selectable"
-          anchor="center left"
-          self="center right"
-          transition-show="fade"
-          transition-hide="fade"
-          :delay="500"
-        >
-          {{ editing ? 'Delete Text' : 'Open Keyboard' }}
-        </q-tooltip>
-      </q-btn>
-    </q-card-actions>
+    </div>
   </q-card>
 </template>
 
@@ -376,6 +402,22 @@ function paginate(min, max, size, page) {
   const first = min + size*index
   const last = Math.min(first + size - 1, max)
   return [first, last]
+}
+
+function codepoints(string) {
+  return [...string]
+}
+
+function surrogatePairs(string) {
+  return string.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g) ?? []
+}
+
+function loneSurrogates(string) {
+  return string.match(/([\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF])/g) ?? []
+}
+
+function nonSurrogates(string) {
+  return string.match(/[^\uD800-\uDBFF\uDC00-\uDFFF]/g) ?? []
 }
 
 export default defineComponent({
@@ -498,6 +540,7 @@ export default defineComponent({
       editing: ref(false),
       inputmode: ref('none'),
       textarea: ref(null),
+      keyboard: ref(null),
       splitheight,
       splitparent,
       toCodepoint(number) {
@@ -512,7 +555,11 @@ export default defineComponent({
         nextTick(() => {
           el.setSelectionRange(pos, pos)
         })
-      }
+      },
+      codepoints,
+      surrogatePairs,
+      loneSurrogates,
+      nonSurrogates
     }
   }
 })
