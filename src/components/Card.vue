@@ -252,10 +252,11 @@
     <div style="display: flex; flex-grow: 1; position: relative">
       <textarea
         ref="textarea"
-        class="fit q-px-md q-py-sm"
-        @pointerdown.stop
+        class="fit q-px-md q-py-sm no-scrollbar"
+        @pointerdown.stop="onTyping"
         @focus="editing = true"
-        @blur="editing = false; inputmode = 'none'; keyboard = false"
+        @blur="editing = false; inputmode = 'none'; keyboard = false; typing = false"
+        @keydown="onTyping"
         style="border: none; outline: none; resize: none; position: absolute; padding-bottom: calc(1em + 4px)"
         :placeholder="'Type in or use the buttons above to insert text here.\n\n(Those on a mobile device may find the keyboard button useful.)'"
         v-model="text"
@@ -263,14 +264,14 @@
       ></textarea>
     </div>
 
-    <div v-if="!$q.screen.lt.md" class="text-caption" style="position: absolute; bottom: 0px; left: 0px; padding-left: 4px; background-color: rgb(255, 255, 255, 0.8); pointer-events: none">
+    <div v-if="!$q.screen.lt.md && !typing" class="text-caption" style="position: absolute; bottom: 0px; left: 0px; padding-left: 4px; background-color: rgb(255, 255, 255, 0.85); pointer-events: none">
       <span>
         {{ plural('codepoint', codepoints(text).length) }} ({{ plural('non-surrogate', nonSurrogates(text).length) }}, {{ plural('surrogate pair', surrogatePairs(text).length) }}, {{ plural('lone surrogate', loneSurrogates(text).length) }}), {{ plural('code unit', text.length) }} (Encoding: UTF-16)
       </span>
     </div>
 
     <div
-      style="position: absolute; bottom: 4px; right: 4px; display: flex; flex-direction: row-reverse; justify-content: end; align-items: end; gap: 4px; background-color: rgb(255, 255, 255, 0.8); border-radius: max(100vw, 100vh)"
+      style="position: absolute; bottom: 4px; right: 4px; display: flex; flex-direction: row-reverse; justify-content: end; align-items: end; gap: 4px; background-color: rgb(255, 255, 255, 0.85); border-radius: max(100vw, 100vh)"
       :style="{
         'gap': cardGutter+'px'
       }"
@@ -526,6 +527,20 @@ export default defineComponent({
     const cardSize = computed(() => 60 + 2/3*vw.value)
     const cardGutter = computed(() => cardSize.value / 5)
 
+    const typing = ref(false)
+    const onTyping = after(typing, 1500)
+
+    function after(model, ms) {
+      let timeout = null
+      return () => {
+        model.value = true
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+          model.value = false
+        }, ms)
+      }
+    }
+
     return {
       blocks,
       names,
@@ -549,6 +564,8 @@ export default defineComponent({
       inputmode: ref('none'),
       textarea: ref(null),
       keyboard: ref(null),
+      typing,
+      onTyping,
       splitheight,
       splitparent,
       toCodepoint(number) {
@@ -580,5 +597,13 @@ export default defineComponent({
 }
 .active-card {
   border-color: $primary;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 </style>
