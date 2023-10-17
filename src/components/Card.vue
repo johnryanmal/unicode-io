@@ -265,7 +265,7 @@
 
     <div v-if="!$q.screen.lt.md" class="text-caption" style="position: absolute; bottom: 0px; left: 0px; padding-left: 4px; background-color: rgb(255, 255, 255, 0.8); pointer-events: none">
       <span>
-        {{ codepoints(text).length }} codepoints ({{ nonSurrogates(text).length }} non-surrogates, {{ surrogatePairs(text).length }} surrogate pairs, {{ loneSurrogates(text).length }} lone surrogates), {{ text.length }} code units (Encoding: UTF-16)
+        {{ plural('codepoint', codepoints(text).length) }} ({{ plural('non-surrogate', nonSurrogates(text).length) }}, {{ plural('surrogate pair', surrogatePairs(text).length) }}, {{ plural('lone surrogate', loneSurrogates(text).length) }}), {{ plural('code unit', text.length) }} (Encoding: UTF-16)
       </span>
     </div>
 
@@ -420,6 +420,14 @@ function nonSurrogates(string) {
   return string.match(/[^\uD800-\uDBFF\uDC00-\uDFFF]/g) ?? []
 }
 
+function plural(string, count) {
+  if (count === 1) {
+    return `${count} ${string}`
+  } else {
+    return `${count} ${string}s`
+  }
+}
+
 export default defineComponent({
   name: 'Card',
   setup() {
@@ -559,7 +567,8 @@ export default defineComponent({
       codepoints,
       surrogatePairs,
       loneSurrogates,
-      nonSurrogates
+      nonSurrogates,
+      plural
     }
   }
 })
