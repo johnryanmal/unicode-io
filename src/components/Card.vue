@@ -243,21 +243,22 @@
     </div>
   </q-card>
 
-  <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="display: inline-flex; flex-direction: column; flex: 1 1 0px; overflow: hidden; transition: all var(--q-transition-duration) ease-in-out; min-height: 50px"
+  <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="display: inline-flex; flex-direction: column; flex: 1 1 0px; transition: all var(--q-transition-duration) ease-in-out; min-height: 50px"
     @pointerdown="(event) => {
       event.preventDefault()
     }"
     @click="textarea.focus()"
   >
-    <div style="display: flex; flex-grow: 1; position: relative">
+    <div ref="textparent" style="display: flex; flex-grow: 1; position: relative; overflow: hidden">
       <textarea
         ref="textarea"
-        class="fit q-px-md q-py-sm no-scrollbar"
+        class="fit q-px-md no-scrollbar"
         @pointerdown.stop="onTyping"
         @focus="editing = true"
         @blur="editing = false; inputmode = 'none'; keyboard = false; typing = false"
         @keydown="onTyping"
-        style="border: none; outline: none; resize: none; position: absolute; padding-bottom: calc(1em + 4px)"
+        style="border: none; outline: none; resize: none"
+        :style="{ 'height': textheight+'px !important', 'padding-top': 8+'px', 'padding-bottom': `calc(${textheight-8+'px'} - 1em)`}"
         :placeholder="'Type in or use the buttons above to insert text here.\n\n(Those on a mobile device may find the keyboard button useful.)'"
         v-model="text"
         :inputmode="inputmode"
@@ -382,7 +383,7 @@ import blocks from 'assets/unicode.json'
 import names from 'assets/names.json'
 
 import { dom } from 'quasar'
-const { width, height } = dom
+const { width } = dom
 
 
 function range(min, max) {
@@ -502,11 +503,16 @@ export default defineComponent({
       splitheight.value = entries[0].contentRect.height
     })
 
+    const textparent = ref(null)
+    const textheight = ref(0)
+    const textobserver = new ResizeObserver((entries) => {
+      textheight.value = entries[0].contentRect.height
+    })
+
     const innerWidth = ref(0)
     function onResize() {
       innerWidth.value = window.innerWidth
 
-      splitheight.value = height(splitparent.value)
       tooltips.value[tooltip.value]?.updatePosition()
     }
     const vw = computed(() => innerWidth.value/100)
@@ -516,6 +522,7 @@ export default defineComponent({
       onResize()
       onFrame()
       splitobserver.observe(splitparent.value)
+      textobserver.observe(textparent.value)
     })
 
     onBeforeUnmount(() => {
@@ -562,6 +569,8 @@ export default defineComponent({
       text: ref(''),
       editing: ref(false),
       inputmode: ref('none'),
+      textheight,
+      textparent,
       textarea: ref(null),
       keyboard: ref(null),
       typing,
