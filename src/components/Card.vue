@@ -118,15 +118,15 @@
                     >
                       <q-item
                         ref="items"
+                        role="button"
                         :tabindex="(card === cardIndex) ? 0 : -1"
                         clickable
                         @click="(event) => {
-                          if ('click', event.detail !== 0) {
+                          if (event.detail !== 0) {
                             // focus text area only if it was clicked
                             textarea.focus()
                           }
-                          const start = textarea.selectionStart
-                          const end = textarea.selectionEnd
+                          const [start, end] = getCursor(textarea)
 
                           const char = String.fromCodePoint(codepoint)
                           text = text.substring(0, start) + char + text.substring(end)
@@ -244,16 +244,12 @@
   </q-card>
 
   <q-card :flat="!editing" bordered :class="editing ? 'active-card' : ''" style="display: inline-flex; flex-direction: column; flex: 1 1 0px; transition: all var(--q-transition-duration) ease-in-out; min-height: 50px"
-    @pointerdown="(event) => {
-      event.preventDefault()
-    }"
-    @click="textarea.focus()"
   >
     <div ref="textparent" style="display: flex; flex-grow: 1; position: relative; overflow: hidden">
       <textarea
         ref="textarea"
         class="fit q-px-md no-scrollbar"
-        @pointerdown.stop="onTyping"
+        @pointerdown="onTyping"
         @focus="editing = true"
         @blur="editing = false; inputmode = 'none'; keyboard = false; typing = false"
         @keydown="onTyping"
@@ -277,23 +273,33 @@
         'gap': cardGutter+'px'
       }"
     >
-      <q-btn flat round icon="backspace" @click.stop="(event) => {
-        if (event.detail !== 0) {
-          // focus text area only if it was clicked
-          textarea.focus()
-        }
-        const start = textarea.selectionStart
-        const end = textarea.selectionEnd
+      <q-item
+        ref="delete"
+        role="button"
+        clickable
+        v-ripple.center
+        class="q-pa-none row justify-center items-center"
+        style="width: 42px; height: 42px; min-height: 0px; border-radius: 50%; touch-action: manipulation"
+        @pointerdown.prevent
+        @click="(event) => {
+          if (event.detail !== 0) {
+            // focus text area only if it was clicked
+            textarea.focus()
+          }
+          const [start, end] = getCursor(textarea)
 
-        if (start !== end) {
-          text = text.substring(0, start) + text.substring(end)
-          setCursor(textarea, start)
-        } else if (start > 0) {
-          text = text.substring(0, start-1) + text.substring(start)
-          setCursor(textarea, start-1)
-        }
-      }">
+          if (start !== end) {
+            text = text.substring(0, start) + text.substring(end)
+            setCursor(textarea, start)
+          } else if (start > 0) {
+            text = text.substring(0, start-1) + text.substring(start)
+            setCursor(textarea, start-1)
+          }
+        }"
+      >
+        <q-icon name="backspace" size="sm" style="transform: translateX(-1px)" />
         <q-tooltip
+          v-if="$q.platform.is.desktop"
           class="text-caption non-selectable"
           anchor="top middle"
           self="bottom middle"
@@ -303,12 +309,20 @@
         >
           Backspace
         </q-tooltip>
-      </q-btn>
+      </q-item>
 
-      <q-btn flat round :icon="keyboard ? 'keyboard_hide' : 'keyboard'"
-        @click.stop="() => {
+      <q-item
+        role="button"
+        clickable
+        v-ripple.center
+        class="q-pa-none row justify-center items-center"
+        style="width: 42px; height: 42px; min-height: 0px; border-radius: 50%; touch-action: manipulation"
+        @pointerdown.prevent
+        @click="() => {
           if (keyboard) {
             //hide keyboard
+            inputmode = 'none'
+            keyboard = false
             textarea.blur()
           } else {
             //show keyboard
@@ -318,7 +332,9 @@
           }
         }"
       >
+        <q-icon :name="keyboard ? 'keyboard_hide' : 'keyboard'" size="sm" />
         <q-tooltip
+          v-if="$q.platform.is.desktop"
           class="text-caption non-selectable"
           anchor="top middle"
           self="bottom middle"
@@ -328,14 +344,23 @@
         >
           {{ keyboard ? 'Hide Keyboard' : 'Show Keyboard' }}
         </q-tooltip>
-      </q-btn>
+      </q-item>
 
-      <q-btn v-if="editing" flat round icon="delete"
-        @click.stop="() => {
+      <q-item
+        v-if="editing"
+        role="button"
+        clickable
+        v-ripple.center
+        class="q-pa-none row justify-center items-center"
+        style="width: 42px; height: 42px; min-height: 0px; border-radius: 50%; touch-action: manipulation"
+        @pointerdown.prevent
+        @click="() => {
           text = ''
         }"
       >
+        <q-icon name="delete" size="sm" />
         <q-tooltip
+          v-if="$q.platform.is.desktop"
           class="text-caption non-selectable"
           anchor="top middle"
           self="bottom middle"
@@ -345,10 +370,20 @@
         >
           Delete Text
         </q-tooltip>
-      </q-btn>
+      </q-item>
 
-      <q-btn v-if="editing" flat round icon="add_circle" @click.stop>
+      <q-item
+        v-if="editing"
+        role="button"
+        clickable
+        v-ripple.center
+        class="q-pa-none row justify-center items-center"
+        style="width: 42px; height: 42px; min-height: 0px; border-radius: 50%; touch-action: manipulation"
+        @pointerdown.prevent
+      >
+        <q-icon name="add_circle" size="sm" />
         <q-tooltip
+          v-if="$q.platform.is.desktop"
           class="text-caption non-selectable"
           anchor="top middle"
           self="bottom middle"
@@ -358,10 +393,20 @@
         >
           Join Selection (U+200B)
         </q-tooltip>
-      </q-btn>
+      </q-item>
 
-      <q-btn v-if="editing" flat round icon="pending" @click.stop>
+      <q-item
+        v-if="editing"
+        role="button"
+        clickable
+        v-ripple.center
+        class="q-pa-none row justify-center items-center"
+        style="width: 42px; height: 42px; min-height: 0px; border-radius: 50%; touch-action: manipulation"
+        @pointerdown.prevent
+      >
+        <q-icon name="pending" size="sm" />
         <q-tooltip
+          v-if="$q.platform.is.desktop"
           class="text-caption non-selectable"
           anchor="top middle"
           self="bottom middle"
@@ -371,7 +416,7 @@
         >
           Split Selection (U+200B)
         </q-tooltip>
-      </q-btn>
+      </q-item>
     </div>
   </q-card>
 </template>
@@ -548,6 +593,7 @@ export default defineComponent({
       }
     }
 
+
     return {
       blocks,
       names,
@@ -585,9 +631,12 @@ export default defineComponent({
       pages,
       paginate,
       width,
-      setCursor(el, pos) {
+      getCursor(el) {
+        return [el.selectionStart, el.selectionEnd]
+      },
+      setCursor(el, start, end) {
         nextTick(() => {
-          el.setSelectionRange(pos, pos)
+          el.setSelectionRange(start, end ?? start)
         })
       },
       codepoints,
