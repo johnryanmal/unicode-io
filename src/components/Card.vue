@@ -263,7 +263,7 @@
 
     <div v-if="!$q.screen.lt.md && !typing" class="text-caption" style="position: absolute; bottom: 0px; left: 0px; padding-left: 4px; background-color: rgb(255, 255, 255, 0.85); pointer-events: none">
       <span>
-        {{ plural('codepoint', codepoints(text).length) }} ({{ plural('non-surrogate', nonSurrogates(text).length) }}, {{ plural('surrogate pair', surrogatePairs(text).length) }}, {{ plural('lone surrogate', loneSurrogates(text).length) }}), {{ plural('code unit', text.length) }} (Encoding: UTF-16)
+        {{ plural('grapheme', graphemes(locale, text).length) }} (Locale: {{ locale }}), {{ plural('codepoint', codepoints(text).length) }} ({{ plural('non-surrogate', nonSurrogates(text).length) }}, {{ plural('surrogate pair', surrogatePairs(text).length) }}, {{ plural('lone surrogate', loneSurrogates(text).length) }}), {{ plural('code unit', text.length) }} (Encoding: UTF-16)
       </span>
     </div>
 
@@ -467,6 +467,12 @@ function nonSurrogates(string) {
   return string.match(/[^\uD800-\uDBFF\uDC00-\uDFFF]/g) ?? []
 }
 
+function graphemes(locale, string) {
+  const segmenter = new Intl.Segmenter(locale, { graularity: 'grapheme' })
+  const segments = segmenter.segment(string)
+  return Array.from(segments).map(({segment}) => segment)
+}
+
 function plural(string, count) {
   if (count === 1) {
     return `${count} ${string}`
@@ -643,7 +649,9 @@ export default defineComponent({
       surrogatePairs,
       loneSurrogates,
       nonSurrogates,
-      plural
+      plural,
+      locale: navigator.language,
+      graphemes
     }
   }
 })
