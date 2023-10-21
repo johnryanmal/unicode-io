@@ -85,12 +85,12 @@
                 <q-card-section :style="{ 'padding': cardGutter+'px' }">
                   <div class="column items-center" :style="{ 'padding-bottom': cardGutter+'px' }">
                     <div class="text-center text-overline">{{ name }}</div>
-                    <q-item-label caption>{{ paginate(min, max, 256, page).map(toCodepoint).join('..') }}</q-item-label>
+                    <q-item-label caption>{{ paginate(min, max, pagesize, page).map(toCodepoint).join('..') }}</q-item-label>
                     <q-pagination
-                      v-if="pages(min, max, 256) > 1"
+                      v-if="pages(min, max, pagesize) > 1"
                       v-model="page"
                       :min="1"
-                      :max="pages(min, max, 256)"
+                      :max="pages(min, max, pagesize)"
                       input
                     />
                   </div>
@@ -106,7 +106,7 @@
                     }"
                   >
                     <q-card
-                      v-for="codepoint, cardIndex in range(...paginate(min, max, 256, page))"
+                      v-for="codepoint, cardIndex in range(...paginate(min, max, pagesize, page))"
                       :key="cardIndex"
                       ref="cards"
                       role="presentation"
@@ -633,6 +633,7 @@ export default defineComponent({
         return `U+${number.toString(16).toUpperCase().padStart(4, '0')}`
       },
       range,
+      pagesize: 256,
       page: ref(1),
       pages,
       paginate,
