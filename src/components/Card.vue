@@ -292,8 +292,19 @@
             text = text.substring(0, start) + text.substring(end)
             setCursor(textarea, start)
           } else if (start > 0) {
-            text = text.substring(0, start-1) + text.substring(start)
-            setCursor(textarea, start-1)
+            const glyphs = graphemes(locale, text)
+
+            let size = 1
+            let pos = 0
+            glyphs.forEach((glyph) => {
+              pos += glyph.length
+              if (pos === start) {
+                size = glyph.length
+              }
+            })
+
+            text = text.substring(0, start-size) + text.substring(start)
+            setCursor(textarea, start-size)
           }
         }"
       >
