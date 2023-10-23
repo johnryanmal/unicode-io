@@ -254,7 +254,7 @@
         @blur="editing = false; inputmode = 'none'; keyboard = false; typing = false"
         @keydown="onTyping"
         style="border: none; outline: none; resize: none"
-        :style="{ 'height': textheight+'px !important', 'padding-top': 8+'px', 'padding-bottom': `calc(${textheight-8+'px'} - 1em)`}"
+        :style="{ 'aspect-ratio': `${textwidth} / ${textheight}`, 'padding-top': 8+'px', 'padding-bottom': `calc(${$q.platform.is.safari ? textheight-8 : textheight}px - 1lh)`}"
         :placeholder="'Type in or use the buttons above to insert text here.\n\n(Those on a mobile device may find the keyboard button useful.)'"
         v-model="text"
         :inputmode="inputmode"
@@ -555,9 +555,12 @@ export default defineComponent({
     })
 
     const textparent = ref(null)
+    const textwidth = ref(0)
     const textheight = ref(0)
     const textobserver = new ResizeObserver((entries) => {
-      textheight.value = entries[0].contentRect.height
+      const bounds = entries[0].contentRect
+      textwidth.value = bounds.width
+      textheight.value = bounds.height
     })
 
     const innerWidth = ref(0)
@@ -621,6 +624,7 @@ export default defineComponent({
       text: ref(''),
       editing: ref(false),
       inputmode: ref('none'),
+      textwidth,
       textheight,
       textparent,
       textarea: ref(null),
