@@ -380,6 +380,18 @@
         class="q-pa-none row justify-center items-center"
         style="width: 42px; height: 42px; min-height: 0px; border-radius: 50%; touch-action: manipulation"
         @pointerdown.prevent
+        @click="() => {
+          const [start, end] = getCursor(textarea)
+
+          const left = text.substring(0, start)
+          const selection = text.substring(start, end)
+          const right = text.substring(end)
+
+          const replacement = selection.replaceAll('\u200C', '')
+
+          text = left + replacement + right
+          setCursor(textarea, start, start+replacement.length)
+        }"
       >
         <q-icon name="add_circle" size="sm" />
         <q-tooltip
@@ -391,7 +403,7 @@
           transition-hide="fade"
           :delay="500"
         >
-          Join Selection (U+200B)
+          Join Selection
         </q-tooltip>
       </q-item>
 
@@ -403,6 +415,22 @@
         class="q-pa-none row justify-center items-center"
         style="width: 42px; height: 42px; min-height: 0px; border-radius: 50%; touch-action: manipulation"
         @pointerdown.prevent
+        @click="() => {
+          const [start, end] = getCursor(textarea)
+
+          const left = text.substring(0, start)
+          const selection = text.substring(start, end)
+          const right = text.substring(end)
+
+          const replacement = (
+            codepoints(selection)
+            .filter(char => char !== '\u200C')
+            .join('\u200C')
+          )
+
+          text = left + replacement + right
+          setCursor(textarea, start, start+replacement.length)
+        }"
       >
         <q-icon name="pending" size="sm" />
         <q-tooltip
@@ -414,7 +442,7 @@
           transition-hide="fade"
           :delay="500"
         >
-          Split Selection (U+200B)
+          Split Selection
         </q-tooltip>
       </q-item>
     </div>
